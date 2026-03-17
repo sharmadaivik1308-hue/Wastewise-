@@ -7,16 +7,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=Caveat:wght@600&display=swap" rel="stylesheet"/>
   <style>
     :root {
-      --bg: #f0f7f1;
-      --white: #ffffff;
-      --green: #1b8a4c;
+      --bg: transparent;
+      --white: rgba(8, 22, 12, 0.65);
+      --green: #52d68a;
       --green2: #27ae60;
-      --green3: #52d68a;
-      --green-pale: #e0f5ea;
-      --green-glow: rgba(39,174,96,0.25);
-      --text: #132b1e;
-      --muted: #5a7a65;
-      --border: #c8e6d0;
+      --green3: #1b8a4c;
+      --green-pale: rgba(82, 214, 138, 0.15);
+      --green-glow: rgba(82, 214, 138, 0.25);
+      --text: #ffffff;
+      --muted: rgba(255, 255, 255, 0.65);
+      --border: rgba(82, 214, 138, 0.25);
       --amber: #f39c12;
       --sky: #2980b9;
     }
@@ -27,6 +27,55 @@
       color: var(--text);
       font-family: 'Outfit', sans-serif;
       overflow-x: hidden;
+    }
+
+
+    /* ─── Slideshow Background ─── */
+    .bg-slideshow { position: fixed; inset: 0; z-index: 0; }
+
+    .bg-slide {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      transition: opacity 1.4s ease-in-out;
+    }
+    .bg-slide.active { opacity: 1; }
+
+    .bg-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(6, 16, 10, 0.78);
+      z-index: 1;
+    }
+
+    /* Override buttons */
+    .btn-learn {
+      background: rgba(255,255,255,0.07);
+      color: rgba(255,255,255,0.8);
+      border: 1px solid rgba(255,255,255,0.18);
+    }
+    .btn-learn:hover {
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.35);
+      color: #fff;
+    }
+    .big-scan-btn {
+      background: var(--green);
+      color: #fff;
+    }
+    
+    .hero-badge {
+      background: rgba(82, 214, 138, 0.15);
+      color: #52d68a;
+      border-color: rgba(82, 214, 138, 0.3);
+    }
+    
+    .stat-pill {
+        background: rgba(8, 22, 12, 0.65);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(82, 214, 138, 0.25);
     }
 
     /* ─── FLOATING LEAVES background ─── */
@@ -51,7 +100,7 @@
       position: fixed; top: 0; left: 0; right: 0; z-index: 200;
       display: flex; align-items: center; justify-content: space-between;
       padding: 1rem 3rem;
-      background: rgba(240,247,241,0.88);
+      background: rgba(8, 22, 12, 0.6);
       backdrop-filter: blur(18px);
       border-bottom: 1px solid var(--border);
     }
@@ -165,7 +214,8 @@
 
     .btn-learn {
       display: inline-flex; align-items: center; gap: 0.5rem;
-      background: var(--white); color: var(--green);
+      background: var(--white);
+      backdrop-filter: blur(16px); color: var(--green);
       border: 2px solid var(--border); font-weight: 700; font-size: 0.95rem;
       padding: 0.9rem 1.8rem; border-radius: 100px;
       text-decoration: none; transition: border-color 0.2s, transform 0.2s, background 0.2s;
@@ -175,6 +225,7 @@
     /* Floating stats pills */
     .stat-pill {
       position: absolute; background: var(--white);
+      backdrop-filter: blur(16px);
       border-radius: 14px; padding: 10px 16px;
       box-shadow: 0 8px 28px rgba(27,138,76,0.13);
       border: 1px solid var(--border);
@@ -212,6 +263,7 @@
     .phone-body {
       width: 220px; height: 380px;
       background: var(--white);
+      backdrop-filter: blur(16px);
       border-radius: 36px;
       box-shadow:
         0 40px 80px rgba(27,138,76,0.2),
@@ -328,7 +380,8 @@
 
     .orbit-icon {
       position: absolute; width: 42px; height: 42px;
-      background: var(--white); border-radius: 12px;
+      background: var(--white);
+      backdrop-filter: blur(16px); border-radius: 12px;
       box-shadow: 0 4px 16px rgba(27,138,76,0.15);
       border: 1px solid var(--border);
       display: flex; align-items: center; justify-content: center;
@@ -401,7 +454,10 @@
       display: grid; grid-template-columns: repeat(3,1fr); gap: 2rem;
     }
     .step-card {
-      background: var(--white); border-radius: 22px;
+      background: var(--white);
+      backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px); border-radius: 22px;
       border: 1.5px solid var(--border); padding: 2rem;
       transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
       position: relative; overflow: hidden;
@@ -428,7 +484,7 @@
     /* ─── BIN CATEGORIES ─── */
     #bins {
       padding: 5rem 5rem;
-      background: var(--white);
+      background: transparent;
       position: relative; z-index: 1;
     }
     .bins-grid {
@@ -445,25 +501,25 @@
     .bin-card h4 { font-size: 0.88rem; font-weight: 800; margin-bottom: 0.3rem; }
     .bin-card p { font-size: 0.72rem; line-height: 1.55; }
 
-    .bin-green  { background: #e8faf0; border-color: #a8e6c0; }
-    .bin-green h4 { color: #1b8a4c; }
-    .bin-green p  { color: #3a7a55; }
+    .bin-green  { background: rgba(27, 138, 76, 0.15); border-color: rgba(82, 214, 138, 0.4); backdrop-filter: blur(12px); }
+    .bin-green h4 { color: #52d68a; }
+    .bin-green p  { color: rgba(255,255,255,0.7); }
 
-    .bin-blue   { background: #e8f4fd; border-color: #a8d4ef; }
-    .bin-blue h4 { color: #2176ae; }
-    .bin-blue p  { color: #3a6e8a; }
+    .bin-blue   { background: rgba(33, 118, 174, 0.15); border-color: rgba(52, 152, 219, 0.4); backdrop-filter: blur(12px); }
+    .bin-blue h4 { color: #3498db; }
+    .bin-blue p  { color: rgba(255,255,255,0.7); }
 
-    .bin-yellow { background: #fef9e7; border-color: #f7dc6f; }
-    .bin-yellow h4 { color: #b7950b; }
-    .bin-yellow p  { color: #8a7033; }
+    .bin-yellow { background: rgba(183, 149, 11, 0.15); border-color: rgba(241, 196, 15, 0.4); backdrop-filter: blur(12px); }
+    .bin-yellow h4 { color: #f1c40f; }
+    .bin-yellow p  { color: rgba(255,255,255,0.7); }
 
-    .bin-red    { background: #fdedec; border-color: #f1948a; }
-    .bin-red h4 { color: #c0392b; }
-    .bin-red p  { color: #8a3830; }
+    .bin-red    { background: rgba(192, 57, 43, 0.15); border-color: rgba(231, 76, 60, 0.4); backdrop-filter: blur(12px); }
+    .bin-red h4 { color: #e74c3c; }
+    .bin-red p  { color: rgba(255,255,255,0.7); }
 
-    .bin-black  { background: #f4f4f4; border-color: #c0c0c0; }
-    .bin-black h4 { color: #2c2c2c; }
-    .bin-black p  { color: #5a5a5a; }
+    .bin-black  { background: rgba(44, 44, 44, 0.3); border-color: rgba(150, 150, 150, 0.4); backdrop-filter: blur(12px); }
+    .bin-black h4 { color: #bdc3c7; }
+    .bin-black p  { color: rgba(255,255,255,0.7); }
 
     /* ─── CTA SCAN ─── */
     .cta-scan {
@@ -543,7 +599,7 @@
     /* ─── ENCOURAGING COUNTER SECTION ─── */
     .counters-section {
       padding: 4rem 5rem;
-      background: var(--bg);
+      background: transparent;
       position: relative; z-index: 1;
     }
     .counters-grid {
@@ -551,7 +607,10 @@
       display: grid; grid-template-columns: repeat(4,1fr); gap: 1.5rem;
     }
     .counter-card {
-      background: var(--white); border-radius: 20px;
+      background: var(--white);
+      backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px); border-radius: 20px;
       border: 1.5px solid var(--border); padding: 1.8rem 1.4rem;
       text-align: center;
       transition: transform 0.3s, box-shadow 0.3s;
@@ -607,6 +666,16 @@
   </style>
 </head>
 <body>
+
+  <!-- Slideshow -->
+  <div class="bg-slideshow">
+    <div class="bg-slide active" style="background-image:url('indore1.jpg')"></div>
+    <div class="bg-slide" style="background-image:url('indore2.jpg')"></div>
+    <div class="bg-slide" style="background-image:url('indore3.jpg')"></div>
+    <div class="bg-slide" style="background-image:url('indore4.jpg')"></div>
+    <div class="bg-slide" style="background-image:url('indore5.jpg')"></div>
+  </div>
+  <div class="bg-overlay"></div>
 
 <!-- ANIMATED LEAF BACKGROUND -->
 <div class="leaves-bg" id="leavesBg"></div>
@@ -861,6 +930,19 @@
 </footer>
 
 <script>
+  /* ── Slideshow ── */
+  const slides = document.querySelectorAll('.bg-slide');
+  let cur = 0;
+  function goTo(n) {
+    if(slides.length === 0) return;
+    slides[cur].classList.remove('active');
+    cur = n;
+    slides[cur].classList.add('active');
+  }
+  if (slides.length > 0) {
+    setInterval(() => goTo((cur + 1) % slides.length), 4500);
+  }
+
   /* ── Generate floating leaves ── */
   const leavesBg = document.getElementById('leavesBg');
   const leafEmojis = ['🍃','🌿','♻️','🌱','🍀','🌾'];

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WasteWise — Result</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --dc: #1b8a4c;
+      --dca: #bbf7d0;
+      --dcbg: rgba(27,138,76,0.08);
+      --bcdark: #15803d;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif; min-height: 100vh;
+      background: #0a1a0e; display: flex; flex-direction: column; align-items: center;
+    }
+
+    /* ─── Slideshow Background ─── */
+    .bg-slideshow { position: fixed; inset: 0; z-index: 0; }
+    .bg-slide { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transition: opacity 1.4s ease-in-out; }
+    .bg-slide.active { opacity: 1; }
+    .bg-overlay { position: fixed; inset: 0; background: rgba(6,16,10,0.85); z-index: 1; }
+
+    /* ─── Nav ─── */
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 1rem 2.5rem; background: rgba(6,16,10,0.65); backdrop-filter: blur(18px); border-bottom: 1px solid rgba(82,214,138,0.12); }
+    .logo { font-size: 1.2rem; font-weight: 900; color: #fff; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; }
+    .logo-icon { background: #1b8a4c; border-radius: 9px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+
+    /* ─── Main ─── */
+    .main { position: relative; z-index: 10; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 6rem 1.5rem 5rem; width: 100%; }
+
+    /* ─── Result Card ─── */
+    .result-card { background: rgba(6,16,10,0.7); backdrop-filter: blur(24px); border: 1px solid var(--dc); border-radius: 28px; padding: 2.5rem 2rem; max-width: 500px; width: 100%; box-shadow: 0 40px 100px rgba(0,0,0,0.5); animation: slideUp 0.5s ease; position: relative; overflow: hidden; }
+    .result-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--dca), var(--dc), var(--dca)); background-size: 200% 100%; animation: shimmer 2.5s linear infinite; }
+    @keyframes shimmer { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+    @keyframes slideUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ─── Drop Animation Area ─── */
+    .anim-wrap { text-align: center; margin-bottom: 1.4rem; height: 180px; position: relative; }
+    .falling-waste { position: absolute; top: -50px; left: 50%; transform: translateX(-50%); font-size: 3rem; animation: dropIn 1.5s ease-in forwards; z-index: 12; filter: drop-shadow(0 8px 14px rgba(0,0,0,0.5)); }
+    @keyframes dropIn {
+      0% { top: -50px; transform: translateX(-50%) rotate(0deg) scale(1.1); opacity: 0; }
+      15% { opacity: 1; }
+      40% { top: 90px; transform: translateX(-50%) rotate(-10deg) scale(0.6); opacity: 1; }
+      55% { top: 90px; transform: translateX(-50%) rotate(-10deg) scale(0.6); opacity: 0; }
+      100% { top: 90px; opacity: 0; }
+    }
+    .impact-ring { position: absolute; bottom: 30px; left: 50%; width: 60px; height: 60px; border-radius: 50%; border: 3px solid var(--dc); opacity: 0; z-index: 10; margin-left: -30px; }
+    @keyframes splashRing { 0% { transform: scale(0); opacity: 0.9; } 100% { transform: scale(2.2); opacity: 0; } }
+
+    /* ─── Text ─── */
+    .detected-label { color: var(--dc); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; text-align: center; margin-bottom: 0.3rem; }
+    .waste-name { font-size: 2rem; font-weight: 900; color: #fff; text-align: center; letter-spacing: -0.04em; text-transform: capitalize; margin-bottom: 1.4rem; }
+
+    /* ─── Confidence Bar ─── */
+    .conf-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
+    .conf-label { font-size: 0.78rem; font-weight: 600; color: rgba(255,255,255,0.5); }
+    .conf-pct { font-size: 0.78rem; font-weight: 800; color: var(--dc); }
+    .conf-bar-bg { height: 7px; background: rgba(255,255,255,0.08); border-radius: 100px; overflow: hidden; margin-bottom: 1.6rem; }
+    .conf-bar-fill { height: 100%; border-radius: 100px; width: 0%; background: linear-gradient(90deg, var(--dc), var(--dca)); transition: width 1s ease-out; }
+
+    /* ─── Bin Box ─── */
+    .bin-box { background: var(--dcbg); border: 1.5px solid var(--dc); border-radius: 18px; padding: 1.4rem 1.6rem; text-align: center; margin-bottom: 1.6rem; }
+    .bin-label-small { font-size: 0.72rem; font-weight: 700; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+    .bin-name-large { font-size: 1.55rem; font-weight: 900; color: #fff; letter-spacing: -0.03em; margin-bottom: 0.2rem;}
+
+    /* Action Buttons */
+    .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .btn-scan-again { background: var(--dc); color: #fff; border: none; padding: 1rem; font-size: 0.95rem; font-weight: 800; border-radius: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none; box-shadow: 0 8px 24px rgba(0,0,0,0.2); transition: transform 0.2s; }
+    .btn-scan-again:hover { transform: translateY(-2px); }
+    .btn-gallery { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.18); padding: 1rem; font-size: 0.95rem; font-weight: 700; border-radius: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: background 0.2s; }
+    .btn-gallery:hover { background: rgba(255,255,255,0.12); transform: translateY(-2px); }
+
+    /* ─── Two Sentences Info Box ─── */
+    .info-box { margin-top: 1.5rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 1.2rem; text-align: left; }
+    .info-label { font-size: 0.75rem; text-transform: uppercase; font-weight: 800; letter-spacing: 0.08em; margin-bottom: 0.3rem; color: rgba(255,255,255,0.4); }
+    .info-sentence { color: #fff; font-size: 0.9rem; line-height: 1.45; margin-bottom: 1rem; }
+    .info-sentence:last-child { margin-bottom: 0; }
+    .info-sentence span { color: var(--dca); font-weight: 700; margin-right: 0.3rem;}
+
+    /* ─── All Bins Legend ─── */
+    .all-bins-legend { margin-top: 2rem; width: 100%; max-width: 800px; display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; padding: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1); z-index: 10; }
+    .legend-item { display: flex; flex-direction: column; align-items: center; background: rgba(6,16,10,0.6); border: 1px solid rgba(255,255,255,0.05); padding: 1rem; border-radius: 16px; width: 110px; }
+    .legend-label { margin-top: 0.5rem; color: #fff; font-size: 0.8rem; font-weight: 700; text-align: center; }
+
+    #galleryInput { display: none; }
+  </style>
+</head>
+<body>
+  <div class="bg-slideshow">
+    <div class="bg-slide active" style="background-image:url('../indore4.jpg')"></div>
+    <div class="bg-slide" style="background-image:url('../indore1.jpg')"></div>
+    <div class="bg-slide" style="background-image:url('../indore2.jpg')"></div>
+  </div>
+  <div class="bg-overlay"></div>
+
+  <nav>
+    <a href="../index.html" class="logo"><div class="logo-icon">♻️</div>WasteWise</a>
+  </nav>
+
+  <div class="main">
+    <div class="result-card" id="resultCard">
+      <div style="text-align:center; margin-bottom:1rem;">
+        <div style="display:inline-block; padding:0.4rem 1rem; border-radius:100px; font-size:0.8rem; font-weight:700; color:var(--dca); background:var(--dcbg); border: 1px solid var(--dc);">
+          ⭐ +10 Green Points Earned!
+        </div>
+      </div>
+
+      <div class="detected-label">AI Detected</div>
+      <div class="waste-name" id="wasteName">—</div>
+
+      <!-- Info sentences -->
+      <div class="info-box" style="margin-top: 0; margin-bottom: 1.6rem;">
+        <div class="info-label">💡 For You: Action Plan</div>
+        <div class="info-sentence"><span id="uSentIcon">✅</span> <span id="uSentText">—</span></div>
+        <div class="info-label" style="margin-top: 1rem;">🌍 For Nature: Impact</div>
+        <div class="info-sentence"><span id="nSentIcon">🍃</span> <span id="nSentText">—</span></div>
+      </div>
+
+      <div class="conf-row">
+        <span class="conf-label">AI Confidence</span>
+        <span class="conf-pct" id="confPct">—</span>
+      </div>
+      <div class="conf-bar-bg">
+        <div class="conf-bar-fill" id="confBar"></div>
+      </div>
+
+      <div class="bin-box" id="binBox">
+        <div class="bin-label-small">Dispose this item in</div>
+        <div class="bin-name-large" id="binName">—</div>
+      </div>
+
+      <!-- Animation Area (Big bin SVG) -->
+      <div class="anim-wrap" id="animWrap" style="margin-bottom: 1.5rem; margin-top: 2rem;">
+        <span class="falling-waste" id="fallingWasteEmoji">🗑️</span>
+        <div class="impact-ring" id="impactRing"></div>
+      </div>
+
+      <div class="action-row">
+        <a href="../scanner.html" class="btn-scan-again">📷 Scan Again</a>
+        <button class="btn-gallery" id="galBtn">🖼️ Upload Photo</button>
+      </div>
+    </div>
+
+    <!-- All Bins Legend -->
+    <div class="all-bins-legend" id="allBinsLegend"></div>
+  </div>
+  <input type="file" id="galleryInput" accept="image/*">
+
+  <script>
+    // 🌍 DEPLOYMENT URL: Change this to your Render/Railway backend URL when you host it!
+    const API_URL = 'http://127.0.0.1:5000';
+
+    const DATA = {
+        plastic:   { bin: "Blue Bin", color: "#2563eb", acc: "#bfdbfe", dark: "#1d4ed8",
+                     use: "Recycle this or sell it to a Kabadiwala.", 
+                     nature: "Prevents microplastic pollution; takes 450+ years to decompose." },
+        paper:     { bin: "Blue Bin", color: "#2563eb", acc: "#bfdbfe", dark: "#1d4ed8",
+                     use: "Keep it dry and flatten it, then recycle or sell to a Kabadiwala.",
+                     nature: "Recycling 1 tonne of paper saves 17 trees and huge amounts of water." },
+        metal:     { bin: "Blue Bin", color: "#2563eb", acc: "#bfdbfe", dark: "#1d4ed8",
+                     use: "Crush it to save space and earn cash by selling to a local scrap dealer.",
+                     nature: "Recycling metal drastically cuts down CO₂ emissions from raw ore mining." },
+        cardboard: { bin: "Blue Bin", color: "#2563eb", acc: "#bfdbfe", dark: "#1d4ed8",
+                     use: "Flatten all boxes before recycling or selling them.",
+                     nature: "Saves forests and uses up to 75% less energy than making from raw wood pulp." },
+        organic:   { bin: "Green Bin", color: "#16a34a", acc: "#bbf7d0", dark: "#15803d",
+                     use: "Compost it at home to create nutrient-rich fertilizer for your plants! 🌱",
+                     nature: "Composting stops this waste from rotting in landfills and releasing methane gas." },
+        food:      { bin: "Green Bin", color: "#16a34a", acc: "#bbf7d0", dark: "#15803d",
+                     use: "Add it to your compost bin (avoid dairy/oil).",
+                     nature: "Returning food waste to the soil enriches the Earth and reduces your carbon footprint." },
+        glass:     { bin: "White Bin", color: "#9ca3af", acc: "#e5e7eb", dark: "#4b5563",
+                     use: "Rinse it gently; wrap safely before throwing into the special glass bin.",
+                     nature: "Glass recycles endlessly without loss of purity, saving sand and energy!" },
+        hazardous: { bin: "Red Bin", color: "#dc2626", acc: "#fecaca", dark: "#b91c1c",
+                     use: "DO NOT mix with regular waste! Drop off at designated hazardous centers.",
+                     nature: "Prevents highly toxic substances from leaking into our soil and groundwater." },
+        ewaste:    { bin: "Yellow Bin", color: "#ca8a04", acc: "#fef08a", dark: "#a16207",
+                     use: "Save up old electronics and give them to authorized e-waste recyclers.",
+                     nature: "Recycling e-waste recovers precious metals and prevents battery acid pollution." },
+        trash:     { bin: "Black Bin", color: "#374151", acc: "#9ca3af", dark: "#111827",
+                     use: "This cannot be recycled. Tie it securely in a bag before tossing.",
+                     nature: "Heads straight to the landfill. Try to reduce your general waste." }
+    };
+
+    const STANDARD_BINS = [
+        { label: "Wet Waste", bin: "Green Bin", color: "#16a34a", acc: "#bbf7d0", dark: "#15803d" },
+        { label: "Dry Waste", bin: "Blue Bin", color: "#2563eb", acc: "#bfdbfe", dark: "#1d4ed8" },
+        { label: "Hazmat", bin: "Red Bin", color: "#dc2626", acc: "#fecaca", dark: "#b91c1c" },
+        { label: "E-Waste", bin: "Yellow Bin", color: "#ca8a04", acc: "#fef08a", dark: "#a16207" },
+        { label: "Glass", bin: "White Bin", color: "#9ca3af", acc: "#e5e7eb", dark: "#4b5563" },
+        { label: "Trash", bin: "Black Bin", color: "#374151", acc: "#9ca3af", dark: "#111827" },
+    ];
+
+    function getBinSVG(color, acc, dark, size=140, animated=true) {
+        let h = Math.floor(size * 1.23);
+        const lidAnim = animated ? `<animateTransform attributeName="transform" type="rotate" values="0 16 50; -42 16 50; -42 16 50; 0 16 50" keyTimes="0; 0.25; 0.65; 1" dur="1.5s" fill="freeze" />` : ``;
+        return `
+        <svg width="${size}" height="${h}" viewBox="0 0 130 160" fill="none">
+            <ellipse cx="65" cy="156" rx="44" ry="6" fill="rgba(0,0,0,0.4)" />
+            <path d="M20 58 Q18 152 22 156 Q65 160 108 156 Q112 152 110 58 Z" fill="${acc}" stroke="${color}" stroke-width="2.5" />
+            <path d="M28 62 Q26 138 30 148 Q38 151 44 148 Q42 138 40 62 Z" fill="white" opacity="0.3" />
+            <line x1="46" y1="70" x2="44" y2="144" stroke="${color}" stroke-width="2" stroke-linecap="round" opacity="0.7" />
+            <line x1="65" y1="70" x2="65" y2="144" stroke="${color}" stroke-width="2" stroke-linecap="round" opacity="0.7" />
+            <line x1="84" y1="70" x2="86" y2="144" stroke="${color}" stroke-width="2" stroke-linecap="round" opacity="0.7" />
+            <text x="65" y="118" text-anchor="middle" font-size="28" fill="${color}" opacity="0.9">♻</text>
+            <rect x="16" y="50" width="98" height="14" rx="7" fill="${color}" />
+            <rect x="20" y="50" width="90" height="7" rx="3.5" fill="${dark}" opacity="0.5" />
+            <g transform-origin="16 50">
+                ${lidAnim}
+                <rect x="12" y="36" width="106" height="18" rx="9" fill="${color}" />
+                <rect x="16" y="36" width="98" height="8" rx="4" fill="${dark}" opacity="0.3" />
+                <rect x="50" y="22" width="30" height="18" rx="9" fill="${color}" />
+                <rect x="55" y="27" width="20" height="8" rx="4" fill="${dark}" opacity="0.4" />
+            </g>
+        </svg>
+        `;
+    }
+
+    const p    = new URLSearchParams(window.location.search);
+    let type   = (p.get('type') || 'trash').toLowerCase();
+    const conf = parseFloat(p.get('confidence') || '0');
+    let emoji  = p.get('emoji') || '🗑️';
+
+    // Remove the emoji circle completely if it was forced by the backend blue circle.
+    if(emoji === '🔵' || emoji === '🟢' || emoji === '🔴' || emoji === '🟡' || emoji === '⚪') {
+        emoji = '🗑️'; // Use a generic physical waste icon since we are displaying the color via SVG.
+    }
+
+    const config = DATA[type] || DATA['trash'];
+
+    document.documentElement.style.setProperty('--dc',   config.color);
+    document.documentElement.style.setProperty('--dca',  config.acc);
+    document.documentElement.style.setProperty('--bcdark', config.dark);
+    document.documentElement.style.setProperty('--dcbg', config.color + '20');
+    document.getElementById('resultCard').style.borderColor = config.color + '55';
+
+    document.getElementById('fallingWasteEmoji').textContent = emoji;
+    document.getElementById('wasteName').textContent = type;
+    document.getElementById('binName').textContent   = config.bin;
+    document.getElementById('confPct').textContent   = conf.toFixed(1) + '%';
+    
+    document.getElementById('uSentText').textContent = config.use;
+    document.getElementById('nSentText').textContent = config.nature;
+
+    document.getElementById('animWrap').insertAdjacentHTML('beforeend', `<div style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); z-index:5;">${getBinSVG(config.color, config.acc, config.dark, 140, true)}</div>`);
+
+    setTimeout(() => { document.getElementById('confBar').style.width = Math.min(conf, 100) + '%'; }, 200);
+    setTimeout(() => { document.getElementById('impactRing').style.animation = 'splashRing 0.6s ease-out forwards'; }, 700);
+
+    const legendContainer = document.getElementById('allBinsLegend');
+    STANDARD_BINS.forEach(b => {
+        legendContainer.innerHTML += `
+            <div class="legend-item">
+                ${getBinSVG(b.color, b.acc, b.dark, 65, false)}
+                <div class="legend-label">${b.label}<br/><span style="color:${b.color}">${b.bin}</span></div>
+            </div>
+        `;
+    });
+
+    const slides = document.querySelectorAll('.bg-slide');
+    let cur = 0;
+    setInterval(() => {
+      slides[cur].classList.remove('active');
+      cur = (cur + 1) % slides.length;
+      slides[cur].classList.add('active');
+    }, 4500);
+
+    const galBtn = document.getElementById('galBtn');
+    const galleryInput = document.getElementById('galleryInput');
+    galBtn.addEventListener('click', () => galleryInput.click());
+    galleryInput.addEventListener('change', async () => {
+      const file = galleryInput.files[0];
+      if (!file) return;
+      document.getElementById('resultCard').style.opacity = '0.4';
+      galBtn.textContent = '⏳ Analysing…';
+      galBtn.disabled = true;
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64 = e.target.result.split(',')[1];
+        try {
+            const res = await fetch(`${API_URL}/predict`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image: base64 })
+            });
+            if (!res.ok) throw new Error('Server error');
+            const data = await res.json();
+            const params = new URLSearchParams({ type: data.waste_type, bin: data.bin, color: data.color, emoji: data.emoji, confidence: data.confidence });
+            window.location.href = 'index.html?' + params.toString();
+        } catch {
+            alert('Could not reach backend.');
+            document.getElementById('resultCard').style.opacity = '1';
+            galBtn.textContent = '🖼️ Upload Photo';
+            galBtn.disabled = false;
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  </script>
+</body>
+</html>

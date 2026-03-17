@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WasteWise — Smart Scanner</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ─── Slideshow Background ─── */
+    .bg-slideshow { position: fixed; inset: 0; z-index: 0; }
+
+    .bg-slide {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      transition: opacity 1.4s ease-in-out;
+    }
+    .bg-slide.active { opacity: 1; }
+
+    .bg-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 22, 12, 0.75);
+      z-index: 1;
+    }
+
+    /* ─── Nav ─── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2.5rem;
+      background: rgba(8, 22, 12, 0.6);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(82,214,138,0.15);
+    }
+
+    .logo {
+      font-size: 1.35rem;
+      font-weight: 900;
+      color: #fff;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      letter-spacing: -0.03em;
+    }
+
+    .logo-icon {
+      background: #1b8a4c;
+      border-radius: 9px;
+      width: 33px;
+      height: 33px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+
+    .back-btn {
+      color: rgba(255,255,255,0.65);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.88rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 0.4rem 1rem;
+      border-radius: 100px;
+      transition: all 0.2s;
+    }
+    .back-btn:hover { color: #fff; border-color: rgba(255,255,255,0.45); }
+
+    /* ─── Location Tag ─── */
+    .location-tag {
+      position: fixed;
+      bottom: 5.8rem;
+      left: 2rem;
+      z-index: 10;
+      background: rgba(8,22,12,0.75);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(82,214,138,0.25);
+      border-radius: 12px;
+      padding: 0.55rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .location-dot {
+      width: 8px;
+      height: 8px;
+      background: #52d68a;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(82,214,138,0.5); }
+      50%       { box-shadow: 0 0 0 6px rgba(82,214,138,0); }
+    }
+
+    /* ─── Slide Dots ─── */
+    .slide-dots {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      gap: 0.45rem;
+    }
+
+    .dot {
+      width: 7px; height: 7px;
+      border-radius: 100px;
+      background: rgba(255,255,255,0.3);
+      transition: all 0.4s;
+      cursor: pointer;
+    }
+    .dot.active { background: #52d68a; width: 22px; }
+
+    /* ─── Main Layout ─── */
+    .main-content {
+      position: relative;
+      z-index: 10;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 6rem 1.5rem 8rem;
+    }
+
+    /* ─── Scanner Card ─── */
+    .scanner-card {
+      background: rgba(8,22,12,0.65);
+      backdrop-filter: blur(22px);
+      border: 1px solid rgba(82,214,138,0.25);
+      border-radius: 28px;
+      padding: 2rem 2rem 2rem;
+      max-width: 520px;
+      width: 100%;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Top title area */
+    .card-header {
+      text-align: center;
+      margin-bottom: 1.4rem;
+    }
+
+    .card-header h1 {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: -0.04em;
+      margin-bottom: 0.35rem;
+    }
+
+    .card-header p {
+      color: rgba(255,255,255,0.55);
+      font-size: 0.88rem;
+      line-height: 1.6;
+    }
+
+    /* Camera wrapper */
+    .camera-wrapper {
+      position: relative;
+      width: 100%;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #030e06;
+      aspect-ratio: 4/3;
+      border: 1.5px solid rgba(82,214,138,0.3);
+      margin-bottom: 1rem;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Scanning animation overlay */
+    .scan-line-overlay {
+      position: absolute;
+      left: 8px; right: 8px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #52d68a, #52d68a, transparent);
+      top: 0;
+      animation: scanMove 2.2s ease-in-out infinite;
+      box-shadow: 0 0 12px #52d68a, 0 0 28px rgba(82,214,138,0.35);
+      pointer-events: none;
+    }
+
+    @keyframes scanMove {
+      0%   { top: 6px; opacity: 0; }
+      10%  { opacity: 1; }
+      90%  { opacity: 1; }
+      100% { top: calc(100% - 8px); opacity: 0; }
+    }
+
+    /* Viewfinder corners */
+    .vf-corner {
+      position: absolute;
+      width: 24px; height: 24px;
+      border-color: #52d68a;
+      border-style: solid;
+      animation: cornerPulse 2s ease-in-out infinite;
+    }
+    .vf-corner.tl { top: 8px;    left: 8px;   border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
+    .vf-corner.tr { top: 8px;    right: 8px;  border-width: 3px 3px 0 0; border-radius: 0 4px 0 0; }
+    .vf-corner.bl { bottom: 8px; left: 8px;   border-width: 0 0 3px 3px; border-radius: 0 0 0 4px; }
+    .vf-corner.br { bottom: 8px; right: 8px;  border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+
+    @keyframes cornerPulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
+    /* Countdown circle overlay on camera */
+    .countdown-overlay {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(2px);
+      z-index: 5;
+    }
+
+    .countdown-circle {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 4px solid #52d68a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      font-weight: 900;
+      color: #fff;
+      box-shadow: 0 0 30px rgba(82,214,138,0.6);
+      animation: circleGlow 1s ease-in-out infinite alternate;
+    }
+
+    @keyframes circleGlow {
+      from { box-shadow: 0 0 20px rgba(82,214,138,0.4); }
+      to   { box-shadow: 0 0 50px rgba(82,214,138,0.9); }
+    }
+
+    .countdown-text {
+      color: #52d68a;
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-top: 0.8rem;
+      letter-spacing: 0.05em;
+    }
+
+    /* Flash effect */
+    .flash-overlay {
+      position: absolute;
+      inset: 0;
+      background: #fff;
+      opacity: 0;
+      z-index: 6;
+      border-radius: 16px;
+      pointer-events: none;
+    }
+
+    /* cameras placeholder text */
+    .camera-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255,255,255,0.3);
+      font-size: 0.9rem;
+    }
+
+    .camera-placeholder .ph-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+
+    /* ─── Action Buttons ─── */
+    .action-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 0;
+    }
+
+    .btn-primary {
+      background: #1b8a4c;
+      color: #fff;
+      border: none;
+      padding: 0.95rem 1rem;
+      font-size: 1rem;
+      font-weight: 800;
+      border-radius: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-family: 'Outfit', sans-serif;
+      box-shadow: 0 8px 24px rgba(27,138,76,0.4);
+      transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 32px rgba(27,138,76,0.5);
+    }
+
+    .btn-primary:disabled {
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.3);
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.07);
+      color: rgba(255,255,255,0.8);
+      border: 1px solid rgba(255,255,255,0.18);
+      padding: 0.95rem 1rem;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border-radius: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-family: 'Outfit', sans-serif;
+      transition: background 0.2s, border-color 0.2s, transform 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.35);
+      transform: translateY(-2px);
+    }
+
+    /* hidden file input */
+    #galleryInput { display: none; }
+
+    /* ─── Loading overlay inside card ─── */
+    #analysingOverlay {
+      position: absolute;
+      inset: 0;
+      border-radius: 28px;
+      background: rgba(8,22,12,0.95);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      backdrop-filter: blur(8px);
+    }
+
+    .ai-spinner {
+      width: 64px; height: 64px;
+      border: 3px solid rgba(82,214,138,0.15);
+      border-top-color: #52d68a;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1.2rem;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #analysingOverlay h3 { color: #fff; font-size: 1.3rem; font-weight: 800; margin-bottom: 0.3rem; }
+    #analysingOverlay p { color: rgba(255,255,255,0.45); font-size: 0.88rem; }
+
+    .ai-tag {
+      margin-top: 1rem;
+      background: rgba(82,214,138,0.15);
+      border: 1px solid rgba(82,214,138,0.3);
+      color: #52d68a;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 0.3rem 0.9rem;
+      border-radius: 100px;
+    }
+
+    /* Error bar */
+    .error-bar {
+      margin-top: 0.8rem;
+      background: rgba(239,68,68,0.12);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #fca5a5;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.6rem 0.9rem;
+      border-radius: 10px;
+      display: none;
+      text-align: center;
+    }
+
+    /* ─── Status pill above camera ─── */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(82,214,138,0.12);
+      border: 1px solid rgba(82,214,138,0.3);
+      color: #52d68a;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      padding: 0.3rem 0.85rem;
+      border-radius: 100px;
+      margin-bottom: 0.75rem;
+    }
+
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #52d68a;
+      animation: pulse 1.5s infinite;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Slideshow -->
+  <div class="bg-slideshow">
+    <div class="bg-slide active" style="background-image:url('indore1.jpg')"></div>
+    <div class="bg-slide" style="background-image:url('indore2.jpg')"></div>
+    <div class="bg-slide" style="background-image:url('indore3.jpg')"></div>
+    <div class="bg-slide" style="background-image:url('indore4.jpg')"></div>
+    <div class="bg-slide" style="background-image:url('indore5.jpg')"></div>
+  </div>
+  <div class="bg-overlay"></div>
+
+  <!-- Nav -->
+  <nav>
+    <a href="index.html" class="logo"><div class="logo-icon">♻️</div>WasteWise</a>
+    <a href="index.html" class="back-btn">← Back to Home</a>
+  </nav>
+
+  <!-- Location Tag -->
+  <div class="location-tag">
+    <div class="location-dot"></div>
+    <span id="locationLabel">Rajwada Palace, Indore</span>
+  </div>
+
+  <!-- Slide Dots -->
+  <div class="slide-dots" id="slideDots"></div>
+
+  <!-- Main -->
+  <div class="main-content">
+    <div class="scanner-card">
+
+      <!-- AI Analysing Overlay -->
+      <div id="analysingOverlay">
+        <div class="ai-spinner"></div>
+        <h3>AI Analysing…</h3>
+        <p>Identifying your waste item</p>
+        <div class="ai-tag">WASTEWISE AI</div>
+      </div>
+
+      <!-- Header -->
+      <div class="card-header">
+        <h1>🔍 Scan Waste</h1>
+        <p>Camera starts instantly. Hold your item steady — AI scans automatically.</p>
+      </div>
+
+      <!-- Status pill -->
+      <div style="text-align:center; margin-bottom:0.75rem;">
+        <div class="status-pill" id="statusPill">
+          <div class="status-dot"></div>
+          <span id="statusText">Starting camera…</span>
+        </div>
+      </div>
+
+      <!-- Camera -->
+      <div class="camera-wrapper">
+        <video id="videoEl" autoplay playsinline muted></video>
+        <div class="camera-placeholder" id="camPlaceholder">
+          <span class="ph-icon">📷</span>
+          <span>Requesting camera…</span>
+        </div>
+        <!-- Viewfinder -->
+        <div class="vf-corner tl"></div>
+        <div class="vf-corner tr"></div>
+        <div class="vf-corner bl"></div>
+        <div class="vf-corner br"></div>
+        <div class="scan-line-overlay"></div>
+        <!-- Countdown overlay -->
+        <div class="countdown-overlay" id="countdownOverlay">
+          <div class="countdown-circle" id="countdownNum">3</div>
+          <div class="countdown-text">HOLD STILL — CAPTURING</div>
+        </div>
+        <!-- Flash -->
+        <div class="flash-overlay" id="flashOverlay"></div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="action-row">
+        <button class="btn-primary" id="scanBtn" disabled>📸 Scan Now</button>
+        <button class="btn-secondary" id="galleryBtn">🖼️ From Gallery</button>
+      </div>
+      <div class="error-bar" id="errorBar"></div>
+    </div>
+  </div>
+
+  <!-- Hidden inputs -->
+  <canvas id="canvasEl" style="display:none;"></canvas>
+  <input type="file" id="galleryInput" accept="image/*">
+
+  <!-- TensorFlow.js for in-browser AI inference -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
+
+  <script>
+    // 🌍 DEPLOYMENT URL: Change this to your Render/Railway backend URL when you host it!
+    const API_URL = 'http://127.0.0.1:5000';
+
+    /* ─── Slideshow ─── */
+    const locations = ['Rajwada Palace, Indore','Lal Bagh Palace, Indore','Sarafa Bazaar, Indore','Chappan Dukan, Indore','Kanch Mandir, Indore'];
+    const slides = document.querySelectorAll('.bg-slide');
+    const dotsC  = document.getElementById('slideDots');
+    const locLbl = document.getElementById('locationLabel');
+    let cur = 0;
+
+    slides.forEach((_, i) => {
+      const d = document.createElement('div');
+      d.className = 'dot' + (i === 0 ? ' active' : '');
+      d.onclick   = () => goTo(i);
+      dotsC.appendChild(d);
+    });
+
+    function goTo(n) {
+      slides[cur].classList.remove('active');
+      dotsC.children[cur].classList.remove('active');
+      cur = n;
+      slides[cur].classList.add('active');
+      dotsC.children[cur].classList.add('active');
+      locLbl.textContent = locations[cur];
+    }
+    setInterval(() => goTo((cur + 1) % slides.length), 4500);
+
+    /* ─── Elements ─── */
+    const video        = document.getElementById('videoEl');
+    const canvas       = document.getElementById('canvasEl');
+    const scanBtn      = document.getElementById('scanBtn');
+    const galleryBtn   = document.getElementById('galleryBtn');
+    const galleryInput = document.getElementById('galleryInput');
+    const cdOverlay    = document.getElementById('countdownOverlay');
+    const cdNum        = document.getElementById('countdownNum');
+    const flashEl      = document.getElementById('flashOverlay');
+    const aiOverlay    = document.getElementById('analysingOverlay');
+    const statusText   = document.getElementById('statusText');
+    const statusPill   = document.getElementById('statusPill');
+    const errorBar     = document.getElementById('errorBar');
+    const camPH        = document.getElementById('camPlaceholder');
+
+    function setStatus(txt, color) {
+      statusText.textContent = txt;
+      if (color) statusPill.style.color = color;
+    }
+
+    /* ─── AI Model Config ─── */
+    const CLASSES = ['cardboard', 'glass', 'metal', 'paper', 'plastic', 'trash'];
+
+    const BIN_MAP = {
+      plastic:   { bin: 'Blue Bin (Recyclable)',  color: '#2563eb', emoji: '🔵' },
+      paper:     { bin: 'Blue Bin (Paper)',        color: '#2563eb', emoji: '🔵' },
+      cardboard: { bin: 'Blue Bin (Recyclable)',  color: '#2563eb', emoji: '🔵' },
+      metal:     { bin: 'Blue Bin (Metal)',        color: '#64748b', emoji: '🔩' },
+      glass:     { bin: 'Blue Bin (Glass)',        color: '#06b6d4', emoji: '🫙' },
+      trash:     { bin: 'Black Bin (General)',     color: '#374151', emoji: '🗑️' },
+    };
+
+    async function loadModel() {
+      setStatus('Connecting to AI backend…');
+      try {
+        const res = await fetch(`${API_URL}/health`);
+        if (res.ok) {
+          setStatus('Backend connected ✓');
+          console.log('✅ Connected to Python backend');
+        } else {
+          throw new Error('Backend not ready');
+        }
+      } catch (e) {
+        console.warn('Backend connection failed:', e.message);
+        setStatus('Camera ready — backend offline', '#fca5a5');
+      }
+    }
+
+    /* ─── Auto-start Camera ─── */
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+        });
+        video.srcObject = stream;
+        camPH.style.display = 'none';
+        scanBtn.disabled = false;
+      } catch (e) {
+        camPH.querySelector('span:last-child').textContent = 'Camera access denied.';
+        setStatus('No camera — use Gallery instead', '#fca5a5');
+        showError('Camera permission denied. Use "From Gallery" to upload a photo instead.');
+      }
+    }
+
+    window.addEventListener('load', () => {
+      startCamera();
+      loadModel();
+    });
+
+    /* ─── Countdown → Capture ─── */
+    let scanning = false;
+
+    scanBtn.addEventListener('click', () => {
+      if (scanning) return;
+      scanning = true;
+      errorBar.style.display = 'none';
+      scanBtn.disabled = true;
+      galleryBtn.disabled = true;
+
+      let count = 3;
+      cdNum.textContent = count;
+      cdOverlay.style.display = 'flex';
+
+      const timer = setInterval(() => {
+        count--;
+        cdNum.textContent = count;
+        if (count <= 0) { clearInterval(timer); doCapture(); }
+      }, 1000);
+    });
+
+    async function doCapture() {
+      cdOverlay.style.display = 'none';
+      flashEl.style.transition = 'opacity 0.08s';
+      flashEl.style.opacity = '1';
+      setTimeout(() => { flashEl.style.transition = 'opacity 0.5s'; flashEl.style.opacity = '0'; }, 100);
+
+      canvas.width  = video.videoWidth  || 640;
+      canvas.height = video.videoHeight || 480;
+      canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      aiOverlay.style.display = 'flex';
+      await classify(canvas, canvas.toDataURL('image/jpeg', 0.85).split(',')[1]);
+    }
+
+    /* ─── Gallery Upload ─── */
+    galleryBtn.addEventListener('click', () => galleryInput.click());
+
+    galleryInput.addEventListener('change', () => {
+      const file = galleryInput.files[0];
+      if (!file) return;
+      errorBar.style.display = 'none';
+      scanBtn.disabled = true;
+      galleryBtn.disabled = true;
+      aiOverlay.style.display = 'flex';
+      setStatus('Analysing uploaded image…');
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = async () => {
+          canvas.width = img.width; canvas.height = img.height;
+          canvas.getContext('2d').drawImage(img, 0, 0);
+          await classify(canvas, e.target.result.split(',')[1]);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    /* ─── Classify: Send to Python backend ─── */
+    async function classify(canvasEl, base64) {
+      setStatus('Sending to AI backend…');
+      try {
+        const res = await fetch(`${API_URL}/predict`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: base64 })
+        });
+        if (!res.ok) throw new Error('Server ' + res.status);
+        
+        const d = await res.json();
+        
+        // Ensure confidence is passed correctly to the dusbin page
+        redirect(d.waste_type, d.bin, d.color, d.emoji, d.confidence);
+      } catch (e) {
+        console.error(e);
+        aiOverlay.style.display = 'none';
+        scanning = false;
+        scanBtn.disabled = false;
+        galleryBtn.disabled = false;
+        setStatus('Failed — try again', '#fca5a5');
+        showError('AI could not process the image. Make sure the Python backend is running on port 5000.');
+      }
+    }
+
+    function redirect(type, bin, color, emoji, confidence) {
+      const p = new URLSearchParams({ type, bin, color, emoji, confidence });
+      window.location.href = 'dusbin/index.html?' + p.toString();
+    }
+
+    function showError(msg) {
+      errorBar.textContent = msg;
+      errorBar.style.display = 'block';
+    }
+  </script>
+</body>
+</html>
+
