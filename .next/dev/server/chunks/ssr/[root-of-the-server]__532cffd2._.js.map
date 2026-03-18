@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 10, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/abhin/Desktop/hack%20garbage/app/page.tsx"],"sourcesContent":["export default function Page() {\r\n  return <h1>Hello, Hack Garbage!</h1>\r\n}"],"names":[],"mappings":";;;;;;AAAe,SAAS;IACtB,qBAAO,6WAAC;kBAAG;;;;;;AACb"}}]
-}
