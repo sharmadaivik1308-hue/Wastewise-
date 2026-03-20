@@ -8,7 +8,7 @@ function App() {
   const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/predict';
 
   const handleImageSelect = (event) => {
     const file = event.target.files[0];
@@ -59,7 +59,7 @@ function App() {
     } catch (err) {
       console.error('Error:', err);
       setError(err.message || 'Failed to analyze image');
-      
+
       // Fallback to mock response
       setPrediction({
         waste_type: 'plastic',
@@ -85,7 +85,7 @@ function App() {
   const getBinColor = (wasteType) => {
     const colors = {
       plastic: '#2563eb',
-      cardboard: '#2563eb', 
+      cardboard: '#2563eb',
       paper: '#2563eb',
       glass: '#9ca3af',
       metal: '#2563eb',
@@ -131,8 +131,8 @@ function App() {
           </div>
 
           {selectedImage && (
-            <button 
-              onClick={analyzeImage} 
+            <button
+              onClick={analyzeImage}
               disabled={loading}
               className="analyze-btn"
             >
@@ -159,11 +159,11 @@ function App() {
                 <p>Confidence: {(prediction.confidence * 100).toFixed(1)}%</p>
               </div>
             </div>
-            
+
             <div className="animation-section">
               <h3>Dustbin Animation</h3>
               <div className="dustbin-container">
-                <div 
+                <div
                   className="dustbin"
                   style={{ backgroundColor: getBinColor(prediction.waste_type) }}
                 >
