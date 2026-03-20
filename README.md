@@ -56,6 +56,9 @@ WasteWise is an AI-powered waste management system that allows users to scan or 
 
 ## 7. Contributors
 - Daivik Sharma
+- Mihika Singh Thakur
+- Abhinav cheepa
+- Mahima Sutrakar
 
 ## 8. License
 MIT License
